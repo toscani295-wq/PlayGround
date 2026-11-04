@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="800" y1="0" x2="800" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1a3730"/><stop offset=".38" stop-color="#122720"/><stop offset=".7" stop-color="#0b1915"/><stop offset="1" stop-color="#07110e"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx=".5" cy=".5" r=".5">
+      <stop stop-color="#e9ddad" stop-opacity=".42"/><stop offset=".35" stop-color="#b5c9a2" stop-opacity=".13"/><stop offset="1" stop-color="#0b1915" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ground" cx=".5" cy=".5" r=".5">
+      <stop stop-color="#203a2c"/><stop offset="1" stop-color="#08130f"/>
+    </radialGradient>
+    <linearGradient id="mist" x1="0" y1="0" x2="1" y2="0">
+      <stop stop-color="#8fb79c" stop-opacity="0"/><stop offset=".5" stop-color="#9cc4aa" stop-opacity=".18"/><stop offset="1" stop-color="#8fb79c" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="blur20"><feGaussianBlur stdDeviation="20"/></filter>
+    <filter id="blur8"><feGaussianBlur stdDeviation="8"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <circle cx="1170" cy="170" r="300" fill="url(#moonGlow)"/>
+  <circle cx="1170" cy="170" r="72" fill="#d8dfbc" opacity=".72"/>
+  <circle cx="1190" cy="155" r="70" fill="#c7d1ae" opacity=".22"/>
+  <g fill="#c9e3c1" opacity=".38">
+    <circle cx="120" cy="120" r="1.4"/><circle cx="260" cy="80" r="1"/><circle cx="380" cy="160" r="1.3"/>
+    <circle cx="530" cy="60" r=".9"/><circle cx="670" cy="120" r="1.4"/><circle cx="810" cy="70" r="1"/>
+    <circle cx="950" cy="140" r="1.1"/><circle cx="1330" cy="90" r="1.3"/><circle cx="1450" cy="180" r="1"/>
+    <circle cx="1540" cy="70" r="1.4"/><circle cx="80" cy="260" r="1"/><circle cx="330" cy="290" r=".9"/>
+  </g>
+  <path d="M0 480C180 430 300 455 480 425c190-32 280 28 450 4 170-23 320-80 670-34v505H0Z" fill="#0d211a" opacity=".9"/>
+  <path d="M0 540c200-55 340-12 520-48 160-32 270-70 420-42 200 38 350-30 660 22v428H0Z" fill="#091a14"/>
+  <g fill="#07130f" opacity=".92">
+    <path d="M-40 900 80 480l22 3 22 185 30-4 22-225 24-2 34 420Z"/>
+    <path d="M120 900 250 430l22 2 20 190 28-2 32-220 22 1 50 499Z"/>
+    <path d="M330 900 430 520l18 3 18 140 26-1 22-185 20 2 42 421Z"/>
+    <path d="M1180 900l94-390 20 2 18 132 24-1 24-186 22 2 52 441Z"/>
+    <path d="M1330 900l110-456 24 2 22 164 26-2 30-220 22 2 46 510Z"/>
+    <path d="M1470 900l84-340 18 2 16 112 22-2 20-154 20 1 50 381Z"/>
+  </g>
+  <g fill="#0a1712" opacity=".75">
+    <path d="M0 900c160-80 280-76 430-52 120 19 180 44 300 31 160-17 240-72 390-50 180 27 280 45 480 22v49Z"/>
+  </g>
+  <ellipse cx="800" cy="790" rx="540" ry="100" fill="url(#ground)" opacity=".8"/>
+  <g filter="url(#blur20)" opacity=".55">
+    <rect x="-100" y="610" width="1100" height="55" rx="27" fill="url(#mist)"/>
+    <rect x="500" y="690" width="1250" height="46" rx="23" fill="url(#mist)"/>
+    <rect x="-200" y="755" width="1100" height="40" rx="20" fill="url(#mist)"/>
+  </g>
+  <g filter="url(#blur8)" opacity=".55">
+    <circle cx="260" cy="640" r="3" fill="#e4d28e"/>
+    <circle cx="390" cy="590" r="2" fill="#e4d28e"/>
+    <circle cx="1210" cy="610" r="2.5" fill="#e4d28e"/>
+    <circle cx="1370" cy="670" r="3" fill="#e4d28e"/>
+    <circle cx="800" cy="560" r="2" fill="#e4d28e"/>
+  </g>
+</svg>

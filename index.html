@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0c1512">
+  <title>PokéSpire — A Wild Deckbuilder</title>
+  <meta name="description" content="A 2D Slay the Spire-style deckbuilder where you climb a wild spire, battle Pokémon, and catch new companions.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23d9b76d'/%3E%3Cpath d='M3 32h58' stroke='%2307100d' stroke-width='8'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23f2e9d4' stroke='%2307100d' stroke-width='5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="ambient" aria-hidden="true"></canvas>
+  <div id="grain" aria-hidden="true"></div>
+
+  <!-- ================= TITLE ================= -->
+  <section id="screen-title" class="screen title-screen active" aria-label="Title screen">
+    <div class="title-moon" aria-hidden="true"></div>
+    <div class="title-ridge ridge-far" aria-hidden="true"></div>
+    <div class="title-ridge ridge-near" aria-hidden="true"></div>
+    <div class="title-spire" aria-hidden="true">
+      <svg viewBox="0 0 420 760" fill="none">
+        <path d="M210 16c17 84 50 118 72 182 20 58 8 102 36 151 26 46 20 94 3 135-13 31-34 54-40 94-7 46 6 90 0 142H149c-6-52 7-96 0-142-6-40-27-63-40-94-17-41-23-89 3-135 28-49 16-93 36-151 22-64 55-98 72-182Z" fill="url(#spireGrad)" stroke="rgba(236,210,145,.24)" stroke-width="2"/>
+        <path d="M210 72c10 57 32 85 48 133 15 44 4 79 27 118 20 34 15 70 2 101-10 23-24 39-29 69-5 33 4 64 0 103H162c-4-39 5-70 0-103-5-30-19-46-29-69-13-31-18-67 2-101 23-39 12-74 27-118 16-48 38-76 48-133Z" stroke="rgba(240,218,160,.18)" stroke-width="1.5"/>
+        <path d="M210 140v410M176 238h68M166 330h88M180 432h60" stroke="rgba(236,210,145,.14)" stroke-width="2"/>
+        <path d="M183 674c17-24 37-24 54 0 12 18-4 44-27 44s-39-26-27-44Z" fill="rgba(8,15,13,.82)" stroke="rgba(236,210,145,.22)"/>
+        <defs>
+          <linearGradient id="spireGrad" x1="210" y1="16" x2="210" y2="760" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#203c35"/><stop offset=".42" stop-color="#13251f"/><stop offset="1" stop-color="#0b1512"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="title-content">
+      <div class="eyebrow"><span class="eyebrow-line"></span>A wild deckbuilding roguelike<span class="eyebrow-line"></span></div>
+      <h1 class="logo" aria-label="PokéSpire">
+        <span class="logo-poke">POKÉ</span>
+        <span class="logo-spire">SPIRE</span>
+      </h1>
+      <p class="tagline">Climb the overgrown tower. Build a bond.<br>Catch whatever waits above.</p>
+
+      <div class="title-partners" aria-hidden="true">
+        <div class="title-mon mon-1"><img src="assets/pokemon/bulbasaur.gif" alt=""></div>
+        <div class="title-mon mon-2"><img src="assets/pokemon/charmander.gif" alt=""></div>
+        <div class="title-mon mon-3"><img src="assets/pokemon/squirtle.gif" alt=""></div>
+      </div>
+
+      <div class="title-actions">
+        <button id="btn-start" class="btn btn-primary btn-large">
+          <span class="btn-shine"></span>
+          <span>Begin expedition</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <button id="btn-continue" class="btn btn-ghost btn-large hidden">Continue expedition</button>
+        <button id="btn-how" class="btn btn-ghost">How to play</button>
+      </div>
+
+      <div class="title-features">
+        <span><b>30+</b> moves</span>
+        <span><b>20+</b> catchable Pokémon</span>
+        <span><b>Branching</b> spire</span>
+      </div>
+    </div>
+
+    <div class="title-footer">
+      <span>Fan-made prototype · Not affiliated with Nintendo or The Pokémon Company</span>
+      <span class="footer-dot"></span>
+      <button id="btn-title-sound" class="icon-btn sound-toggle" aria-label="Toggle sound">Sound: on</button>
+    </div>
+  </section>
+
+  <!-- ================= HUD ================= -->
+  <header id="hud" class="hidden" aria-label="Run status">
+    <button class="hud-brand" id="hud-brand" title="Return to title">
+      <span class="brand-rune">✦</span>
+      <span>POKÉ<em>SPIRE</em></span>
+    </button>
+    <div class="hud-stats">
+      <div class="hud-hp">
+        <div class="hud-hp-top"><span>PARTNER</span><b id="hud-hp-text">72 / 72</b></div>
+        <div class="hud-hp-track"><div id="hud-hp-fill" class="hud-hp-fill"></div></div>
+      </div>
+      <div class="hud-pill" id="hud-gold" title="Gold"><span class="pill-icon coin"></span><b>0</b></div>
+      <div class="hud-pill" id="hud-balls" title="Poké Balls"><span class="ball-icon ball-poke"></span><b>0</b></div>
+      <div class="hud-pill hud-floor" id="hud-floor" title="Floor"><span class="pill-icon spire"></span><b>1</b></div>
+    </div>
+    <div class="hud-actions">
+      <button class="hud-btn" data-open="deck" title="View deck"><span>Deck</span><b id="hud-deck-count">0</b></button>
+      <button class="hud-btn" data-open="party" title="View party"><span>Party</span><b id="hud-party-count">1</b></button>
+      <button class="hud-btn hud-btn-icon" data-open="menu" title="Menu" aria-label="Menu">☰</button>
+    </div>
+  </header>
+
+  <!-- ================= MAP ================= -->
+  <section id="screen-map" class="screen run-screen" aria-label="Spire map">
+    <div class="map-layout">
+      <div class="map-main">
+        <div class="map-heading">
+          <div>
+            <div class="section-kicker">Act I · The Verdant Spire</div>
+            <h2>Choose your ascent</h2>
+          </div>
+          <div class="map-legend">
+            <span><i class="legend-dot wild"></i>Wild</span>
+            <span><i class="legend-dot elite"></i>Elite</span>
+            <span><i class="legend-dot camp"></i>Camp</span>
+          </div>
+        </div>
+        <div class="map-viewport" id="map-viewport">
+          <div class="map-scroll" id="map-scroll">
+            <div class="map-fog map-fog-a" aria-hidden="true"></div>
+            <div class="map-fog map-fog-b" aria-hidden="true"></div>
+            <svg id="map-lines" class="map-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <div id="map-nodes" class="map-nodes"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="map-side">
+        <div class="side-card side-run">
+          <div class="section-kicker">Expedition</div>
+          <div class="side-run-top">
+            <div class="side-portrait"><img id="side-partner" src="assets/pokemon/bulbasaur.gif" alt="Partner"></div>
+            <div>
+              <h3 id="side-partner-name">Bulbasaur</h3>
+              <div id="side-partner-type" class="type-line">Grass · Poison</div>
+              <div class="side-level">Lv. <b id="side-level">5</b></div>
+            </div>
+          </div>
+          <div class="side-stat-grid">
+            <div><span>Floor</span><b id="side-floor">1 / 12</b></div>
+            <div><span>Deck</span><b id="side-deck">12</b></div>
+            <div><span>Caught</span><b id="side-caught">0</b></div>
+            <div><span>Gold</span><b id="side-gold">80</b></div>
+          </div>
+        </div>
+
+        <div class="side-card side-party">
+          <div class="side-card-title"><span>Your party</span><span id="side-party-cap">1 / 6</span></div>
+          <div id="side-party-row" class="side-party-row"></div>
+        </div>
+
+        <div class="side-card side-balls">
+          <div class="side-card-title"><span>Ball pouch</span></div>
+          <div id="side-ball-row" class="side-ball-row"></div>
+        </div>
+
+        <div class="side-card side-relics">
+          <div class="side-card-title"><span>Relics</span><span id="side-relic-cap">0</span></div>
+          <div id="side-relic-row" class="side-relic-row"></div>
+        </div>
+
+        <div class="side-tip" id="map-tip">
+          <span class="tip-spark">✦</span>
+          <p>Click a glowing node to continue. Wild Pokémon can be weakened and caught for new cards.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= BATTLE ================= -->
+  <section id="screen-battle" class="screen run-screen battle-screen" aria-label="Battle">
+    <div class="battle-bg" aria-hidden="true">
+      <div class="battle-moon"></div>
+      <div class="battle-trees trees-left"></div>
+      <div class="battle-trees trees-right"></div>
+      <div class="battle-mist mist-a"></div>
+      <div class="battle-mist mist-b"></div>
+    </div>
+
+    <div class="battle-topline">
+      <div class="battle-chip" id="battle-location">Wilds · Floor 1</div>
+      <div class="battle-chip battle-turn" id="battle-turn">Turn 1</div>
+      <div class="battle-chip battle-energy" id="battle-energy-chip"><span class="energy-orb">⚡</span><b id="battle-energy-text">3 / 3</b></div>
+      <button id="btn-battle-help" class="icon-btn battle-help" aria-label="Battle help">?</button>
+    </div>
+
+    <div class="battle-stage" id="battle-stage">
+      <div class="combatant player-combatant" id="player-side">
+        <div class="platform platform-player"></div>
+        <div class="trainer-shadow" aria-hidden="true"></div>
+        <img class="trainer-sprite" src="assets/trainer.png" alt="" aria-hidden="true">
+        <div class="mon-wrap player-mon-wrap">
+          <img id="player-mon" class="combat-mon player-mon" src="assets/pokemon/back/bulbasaur.gif" alt="Your partner Bulbasaur">
+          <div class="mon-shadow"></div>
+        </div>
+        <div class="combatant-panel player-panel">
+          <div class="combatant-name-row">
+            <div><span id="player-name">Bulbasaur</span><span id="player-level" class="combatant-level">Lv. 5</span></div>
+            <div class="block-badge hidden" id="player-block"><span>◆</span><b>0</b></div>
+          </div>
+          <div class="hp-track large"><div class="hp-fill player-hp-fill" id="player-hp-fill"></div><span class="hp-text" id="player-hp-text">72 / 72</span></div>
+          <div class="status-row" id="player-statuses"></div>
+        </div>
+      </div>
+
+      <div class="stage-center" aria-hidden="true">
+        <div class="stage-rune">✦</div>
+        <div class="stage-line"></div>
+      </div>
+
+      <div class="combatant enemy-combatant" id="enemy-side">
+        <div class="intent-card" id="enemy-intent">
+          <div class="intent-icon" id="intent-icon">⚔</div>
+          <div class="intent-copy"><span>Intent</span><b id="intent-value">7</b></div>
+        </div>
+        <div class="platform platform-enemy"></div>
+        <div class="mon-wrap enemy-mon-wrap">
+          <img id="enemy-mon" class="combat-mon enemy-mon" src="assets/pokemon/pidgey.gif" alt="Wild Pidgey">
+          <div class="mon-shadow"></div>
+        </div>
+        <div class="combatant-panel enemy-panel">
+          <div class="combatant-name-row">
+            <div><span id="enemy-name">Pidgey</span><span id="enemy-level" class="combatant-level">Lv. 4</span></div>
+            <div class="block-badge hidden" id="enemy-block"><span>◆</span><b>0</b></div>
+          </div>
+          <div class="hp-track large"><div class="hp-fill enemy-hp-fill" id="enemy-hp-fill"></div><span class="hp-text" id="enemy-hp-text">32 / 32</span></div>
+          <div class="type-line" id="enemy-types">Normal · Flying</div>
+          <div class="status-row" id="enemy-statuses"></div>
+          <div class="catch-hint" id="catch-hint">Weaken it to improve catch odds</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="battle-mid">
+      <div class="ball-dock" id="ball-dock">
+        <div class="ball-dock-label">CATCH <span id="catch-odds-note">· costs 1 energy</span></div>
+        <div class="ball-buttons" id="ball-buttons"></div>
+      </div>
+      <div class="combat-log" id="combat-log" aria-live="polite"></div>
+      <div class="battle-actions">
+        <button class="btn btn-ghost btn-small" id="btn-view-deck-battle">Deck <b id="battle-deck-count">12</b></button>
+        <button class="btn btn-end" id="btn-end-turn"><span>End turn</span><kbd>Space</kbd></button>
+      </div>
+    </div>
+
+    <div class="hand-zone">
+      <button class="pile pile-draw" id="pile-draw" title="Draw pile">
+        <span class="pile-count" id="draw-count">0</span>
+        <span class="pile-label">Draw</span>
+      </button>
+      <div class="hand" id="hand" aria-label="Your hand"></div>
+      <button class="pile pile-discard" id="pile-discard" title="Discard pile">
+        <span class="pile-count" id="discard-count">0</span>
+        <span class="pile-label">Discard</span>
+      </button>
+    </div>
+
+    <div id="fx-layer" class="fx-layer" aria-hidden="true"></div>
+  </section>
+
+  <!-- ================= SHOP ================= -->
+  <section id="screen-shop" class="screen run-screen shop-screen" aria-label="Shop">
+    <div class="interior-bg shop-bg" aria-hidden="true"></div>
+    <div class="shop-layout">
+      <div class="shop-merchant">
+        <div class="merchant-glow"></div>
+        <img src="assets/pokemon/gastly.gif" alt="A mysterious merchant" class="merchant-mon">
+        <div class="merchant-bubble">
+          <p id="shop-greeting">“Fresh balls, rare moves, and absolutely no questions about where they came from.”</p>
+          <span>— The Peddler</span>
+        </div>
+        <div class="shop-gold"><span class="pill-icon coin"></span><b id="shop-gold">0</b><span>gold</span></div>
+      </div>
+      <div class="shop-stock">
+        <div class="shop-heading">
+          <div><div class="section-kicker">A crooked little stall</div><h2>The Peddler's Wares</h2></div>
+          <button class="btn btn-ghost btn-small" id="btn-shop-leave">Leave stall →</button>
+        </div>
+        <div class="shop-section">
+          <div class="shop-section-title"><span>Moves &amp; techniques</span><span class="shop-sub">Add to your deck</span></div>
+          <div class="shop-cards" id="shop-cards"></div>
+        </div>
+        <div class="shop-section">
+          <div class="shop-section-title"><span>Supplies</span><span class="shop-sub">One use per purchase</span></div>
+          <div class="shop-items" id="shop-items"></div>
+        </div>
+        <div class="shop-services">
+          <button class="service-card" id="btn-shop-remove">
+            <span class="service-icon">✂</span>
+            <span><b>Card removal</b><small>Remove a card from your deck</small></span>
+            <span class="service-price" id="remove-price">75 g</span>
+          </button>
+          <button class="service-card" id="btn-shop-heal">
+            <span class="service-icon">✚</span>
+            <span><b>Warm broth</b><small>Heal 20 HP</small></span>
+            <span class="service-price">35 g</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CAMP ================= -->
+  <section id="screen-camp" class="screen run-screen camp-screen" aria-label="Camp">
+    <div class="interior-bg camp-bg" aria-hidden="true">
+      <div class="campfire"><div class="fire"></div><div class="fire-core"></div><div class="spark s1"></div><div class="spark s2"></div><div class="spark s3"></div></div>
+    </div>
+    <div class="camp-content">
+      <div class="camp-heading">
+        <div class="section-kicker">A quiet clearing</div>
+        <h2>Make camp</h2>
+        <p>The spire hums above the treeline. Take a breath — the next stretch is steep.</p>
+      </div>
+      <div class="camp-companions" id="camp-companions"></div>
+      <div class="camp-options">
+        <button class="camp-option" id="btn-camp-rest">
+          <span class="camp-option-icon">☾</span>
+          <span class="camp-option-copy"><b>Rest</b><small>Heal 30% of your max HP.</small></span>
+          <span class="camp-option-meta" id="camp-rest-value">+22 HP</span>
+        </button>
+        <button class="camp-option" id="btn-camp-train">
+          <span class="camp-option-icon">✦</span>
+          <span class="camp-option-copy"><b>Train</b><small>Upgrade a card in your deck.</small></span>
+          <span class="camp-option-meta">1 card</span>
+        </button>
+      </div>
+      <div class="camp-foot"><button class="btn btn-ghost btn-small" id="btn-camp-leave">Leave camp →</button></div>
+    </div>
+  </section>
+
+  <!-- ================= TREASURE ================= -->
+  <section id="screen-treasure" class="screen run-screen treasure-screen" aria-label="Treasure">
+    <div class="interior-bg treasure-bg" aria-hidden="true"></div>
+    <div class="treasure-content">
+      <div class="section-kicker">Something glints in the roots</div>
+      <h2>A forgotten cache</h2>
+      <div class="chest-wrap">
+        <div class="chest" id="chest">
+          <div class="chest-lid"></div>
+          <div class="chest-body"></div>
+          <div class="chest-lock">✦</div>
+          <div class="chest-glow"></div>
+        </div>
+      </div>
+      <p class="treasure-copy" id="treasure-copy">Choose a relic to carry up the spire.</p>
+      <div class="relic-choices" id="relic-choices"></div>
+    </div>
+  </section>
+
+  <!-- ================= OVERLAYS / FX ================= -->
+  <div id="overlay-root" class="overlay-root"></div>
+  <div id="toast-root" class="toast-root" aria-live="polite"></div>
+  <div id="tooltip" class="tooltip" role="tooltip"></div>
+
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
