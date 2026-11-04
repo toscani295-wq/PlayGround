@@ -203,6 +203,7 @@ function bindGlobal() {
   }));
   $('#btn-end-turn')?.addEventListener('click', endTurn);
   $('#btn-battle-help')?.addEventListener('click', openBattleHelp);
+  $('#btn-battle-menu')?.addEventListener('click', openMenu);
   $('#btn-view-deck-battle')?.addEventListener('click', () => openDeckModal());
   $('#pile-draw')?.addEventListener('click', () => openPileModal('draw'));
   $('#pile-discard')?.addEventListener('click', () => openPileModal('discard'));
@@ -236,6 +237,7 @@ function bindGlobal() {
   });
 
   document.addEventListener('keydown', onKeyDown);
+  $('#hand')?.addEventListener('scroll', updateHandFade, { passive: true });
   addEventListener('resize', () => {
     if (state.battle && state.screen === 'battle') renderHand();
   });
@@ -432,6 +434,8 @@ function renderMap() {
   const avail = new Set(availableNodes().map(n => n.id));
   const pathSet = new Set(run.path || run.visited);
   const cur = NODE_BY_ID[run.current] || NODE_BY_ID.start;
+  const kicker = $('.map-heading .section-kicker');
+  if (kicker) kicker.textContent = `Act I · The Verdant Spire · Floor ${Math.min(12, run.floor + 1)} / 12`;
 
   let svgHtml = '';
   for (const [a, b] of MAP_EDGES) {
@@ -893,9 +897,11 @@ function renderHand() {
   const b = state.battle;
   const handEl = $('#hand');
   if (!b || !handEl) return;
+  const prevScroll = handEl.scrollLeft;
   handEl.innerHTML = '';
   if (!b.hand.length) {
     handEl.innerHTML = '<div style="font-size:10px;letter-spacing:.08em;color:var(--muted-2);padding:18px 0">No cards in hand — end your turn.</div>';
+    updateHandFade();
     return;
   }
   for (const card of b.hand) {
@@ -906,13 +912,31 @@ function renderHand() {
     });
     handEl.appendChild(el);
   }
-  const count = b.hand.length;
-  const cardW = innerWidth <= 760 ? 106 : (innerHeight <= 680 ? 124 : 138);
-  const gap = 6;
-  const needed = count * cardW + Math.max(0, count - 1) * gap;
-  const avail = Math.max(200, handEl.clientWidth - 10);
-  const overlap = needed > avail ? -(needed - avail) / Math.max(1, count - 1) : 0;
-  handEl.style.setProperty('--overlap', overlap.toFixed(1) + 'px');
+  const mobile = innerWidth <= 760;
+  if (mobile) {
+    // On phones the hand is a horizontal scroller: never overlap cards.
+    handEl.style.setProperty('--overlap', '0px');
+    handEl.scrollLeft = prevScroll;
+  } else {
+    const count = b.hand.length;
+    const cardW = innerHeight <= 680 ? 124 : 138;
+    const gap = 6;
+    const needed = count * cardW + Math.max(0, count - 1) * gap;
+    const avail = Math.max(200, handEl.clientWidth - 10);
+    const overlap = needed > avail ? -(needed - avail) / Math.max(1, count - 1) : 0;
+    handEl.style.setProperty('--overlap', overlap.toFixed(1) + 'px');
+  }
+  updateHandFade();
+}
+
+function updateHandFade() {
+  const handEl = $('#hand');
+  const zone = $('.hand-zone');
+  if (!handEl || !zone) return;
+  const canScroll = handEl.scrollWidth > handEl.clientWidth + 4;
+  const atEnd = handEl.scrollLeft + handEl.clientWidth >= handEl.scrollWidth - 6;
+  zone.classList.toggle('can-scroll', canScroll && !atEnd);
+  zone.classList.toggle('can-scroll-left', canScroll && handEl.scrollLeft > 6);
 }
 
 async function playCard(uid) {
@@ -927,6 +951,7 @@ async function playCard(uid) {
     return;
   }
   const el = $(`#hand .card[data-uid="${uid}"]`);
+  logBattle(`You use <b>${CARDS[card.id].name}</b>.`);
   b.busy = true;
   b.player.energy -= stats.cost;
   b.hand.splice(idx, 1);
@@ -1387,6 +1412,7 @@ function showCardReward(node, gold, elite) {
         const card = { uid: 'preview-' + id + '-' + Math.random(), id, upgraded: false };
         const el = makeCardEl(card, { className: 'reward-card', onClick: () => {
           addCard(id);
+          saveRun();
           sfx('coin');
           toast(`<b>${CARDS[id].name}</b> added to your deck.`, 'good');
           closeOverlay();
@@ -1450,6 +1476,7 @@ function addRelic(id) {
     state.run.balls.master = (state.run.balls.master || 0) + 1;
     toast('A <b>Master Ball</b> rests in your pouch.', 'good', 3000);
   }
+  saveRun();
   updateHud();
   renderSidePanel();
 }
@@ -1548,6 +1575,7 @@ function handleCapture() {
   }
   const full = !wasCaught && run.party.length >= MAX_PARTY;
   if (!wasCaught && !full) run.party.push(key);
+  saveRun();
   updateHud();
   renderBattle();
   sfx('victory');
@@ -1594,6 +1622,7 @@ function handleCapture() {
           const released = run.party[i];
           run.party.splice(i, 1);
           run.party.push(key);
+          saveRun();
           sfx('click');
           toast(`<b>${SPECIES[released].name}</b> was released. ${sp.name} joins the party.`, 'good', 3000);
           $('#release-grid', root).innerHTML = `<div class="catch-note" style="color:var(--gold-2)">${sp.name} joined the party.</div>`;
@@ -1717,6 +1746,7 @@ function buyShopCard(i) {
   state.run.gold -= item.price;
   item.sold = true;
   addCard(item.id);
+  saveRun();
   sfx('buy');
   toast(`<b>${CARDS[item.id].name}</b> added to your deck.`, 'good', 2200);
   renderShop();
@@ -1738,6 +1768,7 @@ function buyShopItem(item) {
     state.run.maxHp += 10; state.run.hp += 10;
     toast('Max HP increased by <b>10</b>.', 'good', 2200);
   }
+  saveRun();
   sfx('buy');
   renderShop();
 }
@@ -1757,6 +1788,7 @@ function shopRemoveCard() {
       const idx = state.run.deck.findIndex(c => c.uid === card.uid);
       if (idx >= 0) state.run.deck.splice(idx, 1);
       s.removeUsed = true;
+      saveRun();
       closeOverlay();
       sfx('coin');
       toast(`<b>${CARDS[card.id].name}</b> removed from your deck.`, 'good', 2200);
@@ -1774,6 +1806,7 @@ function shopHeal() {
   s.healUsed = true;
   const before = state.run.hp;
   state.run.hp = Math.min(state.run.maxHp, state.run.hp + 20);
+  saveRun();
   sfx('heal');
   toast(`The broth restores <b>${state.run.hp - before} HP</b>.`, 'good', 2000);
   renderShop();
@@ -1812,6 +1845,7 @@ function campRest() {
   if (amount <= 0) return;
   state.run.hp += amount;
   c.used = true;
+  saveRun();
   sfx('heal');
   toast(`You rest by the fire and recover <b>${amount} HP</b>.`, 'good', 2600);
   renderCamp();
@@ -1829,6 +1863,7 @@ function campTrain() {
       if (!target) return;
       target.upgraded = true;
       c.used = true;
+      saveRun();
       closeOverlay();
       sfx('catch');
       toast(`<b>${CARDS[target.id].name}</b> upgraded.`, 'good', 2400);
@@ -2008,6 +2043,11 @@ function openMenu() {
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;max-width:360px;margin:0 auto">
       <button class="btn btn-primary" data-menu="resume">Resume</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn btn-ghost" data-menu="deck">Deck <b style="color:var(--gold-2)">${state.run.deck.length}</b></button>
+        <button class="btn btn-ghost" data-menu="party">Party <b style="color:var(--gold-2)">${state.run.party.length}</b></button>
+      </div>
+      <button class="btn btn-ghost" data-menu="relics">Relics <b style="color:var(--gold-2)">${state.run.relics.length}</b></button>
       <button class="btn btn-ghost" data-menu="help">How to play</button>
       <button class="btn btn-ghost" data-menu="sound">${state.sound ? 'Sound: on' : 'Sound: off'}</button>
       ${!inBattle ? '<button class="btn btn-ghost" data-menu="save">Save & quit to title</button>' : ''}
@@ -2018,6 +2058,9 @@ function openMenu() {
       $$('[data-menu]', root).forEach(btn => btn.addEventListener('click', () => {
         const action = btn.dataset.menu;
         if (action === 'resume') closeOverlay();
+        if (action === 'deck') openDeckModal();
+        if (action === 'party') openPartyModal();
+        if (action === 'relics') openRelicsModal();
         if (action === 'help') openHowToPlay();
         if (action === 'sound') { toggleSound(); btn.textContent = state.sound ? 'Sound: on' : 'Sound: off'; }
         if (action === 'save') { saveRun(); closeOverlay(); showTitle(); toast('Expedition saved.', 'good'); }
