@@ -918,7 +918,7 @@ kbd{font-family:inherit;font-size:9px;padding:1px 4px;border-radius:3px;backgrou
   .ball-btn .ball-count{display:none}
   .combat-log{display:none}
   .battle-actions{gap:4px}
-  .btn-view-deck-battle{display:none}
+  #btn-view-deck-battle{display:none}
   .btn-end{padding:8px 10px;font-size:9px;gap:4px}
   .btn-end kbd{display:none}
   .hand-zone{flex:0 0 176px;gap:3px;padding-bottom:calc(2px + var(--safe-bottom))}

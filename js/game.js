@@ -1236,6 +1236,7 @@ async function executeEnemyMove(move) {
       if (res.hpLoss > 0) logBattle(`${b.enemy.name} hits for <b>${res.hpLoss}</b>.`, 'damage');
       if (res.blocked > 0) logBattle(`Your Block absorbs <b>${res.blocked}</b>.`, 'heal');
       await wait(state.reduced ? 20 : 170);
+      if (b.enemy.hp <= 0) { await winBattle(false); return; }
       if (state.run.hp <= 0) { await handlePlayerDeath(); return; }
     }
     if (move.selfDamage) {
