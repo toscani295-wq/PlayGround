@@ -816,7 +816,12 @@ export function getStats(cardId, upgraded = false) {
   };
   if (upgraded && def.up) {
     for (const [k, v] of Object.entries(def.up)) {
-      if (k === 'special') s.special = v;
+      if (k === 'special') {
+        // Numeric upgrades (Flail, Metronome) boost the move; only a string
+        // replaces the special behaviour itself.
+        if (typeof v === 'string') s.special = v;
+        else s.specialBonus = v;
+      }
       else if (k === 'cost') s.cost = Math.max(0, s.cost + v);
       else if (['dmg','block','heal','draw','energy','strength','hits','gold'].includes(k)) s[k] += v;
       else s.statuses[k] = (s.statuses[k] || 0) + v;

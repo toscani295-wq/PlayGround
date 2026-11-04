@@ -911,7 +911,9 @@ function renderHand() {
   const gap = 6;
   const needed = count * cardW + Math.max(0, count - 1) * gap;
   const avail = Math.max(200, handEl.clientWidth - 10);
-  const overlap = needed > avail ? -(needed - avail) / Math.max(1, count - 1) : 0;
+  // On phones the hand scrolls horizontally instead of stacking cards into
+  // an unreadable pile, so no negative overlap there.
+  const overlap = innerWidth <= 760 ? 0 : (needed > avail ? -(needed - avail) / Math.max(1, count - 1) : 0);
   handEl.style.setProperty('--overlap', overlap.toFixed(1) + 'px');
 }
 
@@ -2112,7 +2114,7 @@ function showEndScreen(victory, captured = false) {
       </div>
     </div>
   `, {
-    narrow: true, dismissible: false, onMount(root) {
+    modalClass: 'modal-end', dismissible: false, onMount(root) {
       $$('[data-end]', root).forEach(btn => btn.addEventListener('click', () => {
         sfx('click');
         closeOverlay();
